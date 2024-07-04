@@ -16,7 +16,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }));
 
-/*
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -26,6 +26,14 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   }
+});
+
+/*
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'financeiro',
+  password: 'root',
 });*/
 
 let imagemPadrao = null
@@ -46,13 +54,6 @@ const readJsonFile = async (filePath) => {
 }
 
 readJsonFile(filePath)
-
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'financeiro',
-  password: 'root',
-});
 
 pool.connect((err, client, release) => {
     if (err) {
