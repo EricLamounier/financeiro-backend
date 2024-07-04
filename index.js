@@ -16,6 +16,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }));
 
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -27,7 +28,9 @@ const pool = new Pool({
   }
 });
 
-function readJsonFile(filePath) {
+let imagemPadrao = null
+
+const readJsonFile = async (filePath) => {
   fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) {
           console.error("Erro ao ler o arquivo:", err);
@@ -35,14 +38,16 @@ function readJsonFile(filePath) {
       }
       try {
           const jsonData = JSON.parse(data);
-          console.log("Texto grande:", jsonData.largeText);
+          imagemPadrao = jsonData.largeText;
       } catch (error) {
           console.error("Erro ao parsear JSON:", error);
       }
   });
 }
 
-/*const pool = new Pool({
+readJsonFile(filePath)
+/*
+const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'financeiro',
@@ -53,7 +58,7 @@ pool.connect((err, client, release) => {
     if (err) {
       return console.error('Erro ao conectar ao banco de dados:', err.stack);
     }
-    console.log('Conectado ao banco de dados!');
+    //console.log('Conectado ao banco de dados!');
     release(); // Libera o cliente para o pool
 });
 
@@ -170,13 +175,16 @@ app.post('/api/pessoa/post', async (req, res) => {
       await client.query('BEGIN');
       let { nome, imagem } = req.body;
 
-      imagem = imagem || readJsonFile(filePath);
-      const query = "INSERT INTO pessoa (nome, imagem) VALUES ($1, decode($2, 'base64')) RETURNING id";
-      const result = await client.query(query, [nome, imagem]);
+      let aux = imagem
+      if(imagem)
+          imagemPadrao = imagem
+
+      const query = "INSERT INTO pessoa (nome, imagem) VALUES ($1, decode($2, 'base64')) RETURNING *";
+      const result = await client.query(query, [nome, imagemPadrao]);
 
       const id = result.rows[0].id;
       await client.query('COMMIT');
-      res.json({ id, nome, imagem });
+      res.json({ id, nome, imagem: imagemPadrao });
     } catch (e) {
       await client.query('ROLLBACK');
       res.status(500).json({ mensagem: 'Erro ao inserir os dados!', erro: e.message });
@@ -189,7 +197,7 @@ app.post('/api/pessoa/post', async (req, res) => {
   app.get('/api/pessoa/get', async (req, res) => {
     
     try {
-      const result = await pool.query('SELECT id, nome, encode(imagem, \'base64\') as imagem FROM pessoa');
+      const result = await pool.query("SELECT id, nome, encode(imagem, 'base64') as imagem FROM pessoa");
       res.json(result.rows);
     } catch (e) {
       res.status(500).json({ mensagem: 'Erro ao buscar as pessoas!', erro: e.message });
