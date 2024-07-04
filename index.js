@@ -8,7 +8,7 @@ const filePath = './texto.json';
 
 const cors = require('cors');
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '25mb' }));
 
 app.use(cors({
     origin: '*',
@@ -16,7 +16,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }));
 
-
+/*
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -26,7 +26,7 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   }
-});
+});*/
 
 let imagemPadrao = null
 
@@ -46,13 +46,13 @@ const readJsonFile = async (filePath) => {
 }
 
 readJsonFile(filePath)
-/*
+
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'financeiro',
   password: 'root',
-});*/
+});
 
 pool.connect((err, client, release) => {
     if (err) {
@@ -211,10 +211,11 @@ app.post('/api/pessoa/post', async (req, res) => {
       await client.query('BEGIN');
       const { nome, imagem } = req.body;
       const { id } = req.params;
+
       const query = 'UPDATE pessoa SET nome = $1, imagem = decode($2, \'base64\') WHERE id = $3';
       await client.query(query, [nome, imagem, id]);
       await client.query('COMMIT');
-      res.json({ id, nome, imagem });
+      res.json({ nome, imagem, id });
     } catch (e) {
       await client.query('ROLLBACK');
       res.status(500).json({ mensagem: 'Erro ao atualizar os dados!', erro: e.message });
