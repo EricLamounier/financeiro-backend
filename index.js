@@ -3,7 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const fs = require('fs');
-require('dotenv').config()
+//require('dotenv').config()
 const filePath = './texto.json';
 
 const cors = require('cors');
@@ -27,7 +27,6 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
-
 /*
 const pool = new Pool({
   user: 'postgres',
@@ -59,7 +58,7 @@ pool.connect((err, client, release) => {
     if (err) {
       return console.error('Erro ao conectar ao banco de dados:', err.stack);
     }
-    //console.log('Conectado ao banco de dados!');
+    console.log('Conectado ao banco de dados!');
     release(); // Libera o cliente para o pool
 });
 
@@ -178,14 +177,14 @@ app.post('/api/pessoa/post', async (req, res) => {
 
       let aux = imagem
       if(imagem)
-          imagemPadrao = imagem
+          imagem = imagemPadrao
 
       const query = "INSERT INTO pessoa (nome, imagem) VALUES ($1, decode($2, 'base64')) RETURNING *";
-      const result = await client.query(query, [nome, imagemPadrao]);
+      const result = await client.query(query, [nome, imagem]);
 
       const id = result.rows[0].id;
       await client.query('COMMIT');
-      res.json({ id, nome, imagem: imagemPadrao });
+      res.json({ id, nome, imagem: imagem });
     } catch (e) {
       await client.query('ROLLBACK');
       res.status(500).json({ mensagem: 'Erro ao inserir os dados!', erro: e.message });
